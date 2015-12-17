@@ -1,0 +1,3 @@
+class Offer < Post
+
+end

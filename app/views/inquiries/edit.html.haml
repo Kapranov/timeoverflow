@@ -1,0 +1,9 @@
+%h1
+  = @inquiry.title
+  %small
+    = t ".edit"
+
+= render partial: 'shared/post_form', locals: {post: @inquiry}
+
+:javascript
+  $("#inquiry_tag_list").tagsManager();

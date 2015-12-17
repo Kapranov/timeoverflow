@@ -1,0 +1,129 @@
+%h1
+  %small
+    - unless  @user.active?(current_organization)
+      = t ".inactive"
+  = @user.username
+  %small
+    = @user.unconfirmed_email || @user.email
+    - if @user.superadmin?
+      %span.label.label-important= t ".superadmin"
+
+.row
+  .col-sm-2
+    - if @user == current_user
+      %a{href: "https://www.gravatar.com", target: "_blank"}
+        = image_tag avatar_url(@user, 160)
+    - else
+      = image_tag avatar_url(@user, 160)
+
+  .col-sm-10
+    :markdown
+      #{@user.description}
+
+    %ul.nav.nav-pills.pull-right
+      - if @user == current_user
+        %li
+          %a{href: edit_user_path(@user)}
+            %span.glyphicon.glyphicon-pencil
+            = t "global.edit"
+      - else
+        %li
+          %a
+            %span.glyphicon.glyphicon-envelope
+            = t "send message"
+      - if admin? || @user != current_user
+        %li
+          %a{href: give_time_user_path(@user)}
+            %span.glyphicon.glyphicon-time
+            = t "global.give_time"
+
+
+
+    %dl.dl-horizontal
+      - if @user.date_of_birth.present? && admin?
+        %dt= User.human_attribute_name(:date_of_birth)
+        %dd= l @user.date_of_birth
+      - phones = [@user.phone, @user.alt_phone].map(&:presence).compact
+      - if phones.present?
+        %dt= t(".phone", count: phones.size)
+        %dd
+          - phones.each_with_index do |ph, idx|
+            - unless idx.zero?
+              &mdash;
+            = ph
+
+.row
+  .col-sm-6.offers
+    .panel.panel-default
+      .panel-heading
+        %h2.panel-title= Offer.model_name.human(count: :many)
+
+      %table.table.table-condensed.offers
+        - @user.offers.each do |post|
+          %tr
+            %td= link_to post, post
+            %td= post.description
+            %td
+              %a{href: give_time_user_path(@user, offer: post.id), title: t("global.give_time")}
+                %span.glyphicon.glyphicon-time
+
+  .col-sm-6.inquiries
+    .panel.panel-default
+      .panel-heading
+        %h2.panel-title= Inquiry.model_name.human(count: :many)
+
+      %table.table.table-condensed.offers
+        - @user.inquiries.each do |post|
+          %tr
+            %td= link_to post, post
+            %td= post.description
+
+%h2
+  =t(".accounts")
+.row
+  - @user.members.each do |member|
+    .col-sm-4
+      .panel.panel-default
+        .panel-heading
+          %h3.panel-title= member.organization
+        .panel-body
+          - if member.manager
+            %p.danger
+              ADMIN
+          %p
+            %strong
+              = t(".created_at")
+            = member.entry_date ? l(member.entry_date, format: :short) : mdash
+            %br
+            %strong
+              = t(".user_no")
+            = member.member_uid || mdash
+            %br
+            %strong
+              = t(".balance")
+            = seconds_to_hm(member.account.try(:balance) || mdash)
+
+
+%h3
+  =t(".movements")
+.transactions
+  %table.table.table-condensed
+    %thead
+      %tr
+        %th
+          =t(".date")
+        %th
+          =t(".from_to")
+        %th
+          =t(".post")
+        %th
+          =t(".reason")
+        %th
+          =t(".quantity")
+    - @user.movements.order("created_at DESC").limit(10).each do |mv|
+      %tr
+        %td= l mv.created_at, format: :short
+        %td= mv.other_side.account
+        %td= mv.transfer.post
+        %td= mv.transfer.reason
+        %td= seconds_to_hm(mv.amount)

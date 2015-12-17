@@ -1,0 +1,18 @@
+- posts.each do |post|
+  .post
+    %h5
+      = link_to post do
+        = post.title
+        %span.glyphicon.glyphicon-expand
+      %small
+        - if post.category
+          %span.glyphicon.glyphicon-folder-open
+          - path = get_index_path(post,cat: post.category)
+          =link_to path do
+            = post.category
+        - (post.tags || []).each do |tag|
+          %span.glyphicon.glyphicon-tag
+          - path = get_index_path(post,tag: tag)
+          =link_to path do
+            = tag
+    %p= post.description
